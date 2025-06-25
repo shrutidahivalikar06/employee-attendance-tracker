@@ -1,0 +1,28 @@
+# Byte-compiled / cache files
+_pycache_/
+*.py[cod]
+
+# Migrations (skip DB history files)
+employees/migrations/
+!employees/migrations/_init_.py
+
+# SQLite database
+db.sqlite3
+
+# Static/media (if auto-generated)
+staticfiles/
+media/
+
+# VSCode settings
+.vscode/
+
+# Logs and system junk
+*.log
+*.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/

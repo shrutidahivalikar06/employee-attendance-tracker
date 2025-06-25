@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee Dashboard</title>
+  {% if employee.is_hr %}
+  <a href="{% url 'hr_dashboard' %}">HR Dashboard</a>
+{% endif %}
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fc; }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .container { display: flex; height: calc(100vh - 60px); }
+    .sidebar {
+      width: 220px;
+      background-color: #fff;
+      border-right: 1px solid #ccc;
+      padding: 2rem 1rem;
+    }
+    .sidebar a {
+      display: block;
+      margin-bottom: 2rem;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .sidebar form button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    .employee-info {
+      background: white;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+      font-size: 1rem;
+      color: #333;
+    }
+    .employee-info p { margin: 0.25rem 0; }
+    .employee-info strong { color: #007bff; }
+    .status-title {
+      margin-bottom: 1.5rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .action-boxes {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .action-box {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      width: 200px;
+      text-align: center;
+    }
+    .action-box button {
+      padding: 0.6rem 1.2rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .action-box button:hover:not(:disabled) { background-color: #0056b3; }
+    .action-box button:disabled { background-color: #aaa; cursor: not-allowed; }
+    .request-box button {
+      background-color: #28a745;
+      cursor: pointer;
+    }
+    .request-box button:hover:not(:disabled) {
+      background-color: #1e7e34;
+    }
+    .log-table {
+      margin-top: 2rem;
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+    .log-table th, .log-table td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .log-table th {
+      background-color: #007bff;
+      color: white;
+    }
+    .log-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+    .message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 0.8rem;
+      border: 1px solid #c3e6cb;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+
+    .request-form-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .request-form-overlay.show { display: flex; }
+    .request-form-container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+    .request-form-container input,
+    .request-form-container textarea {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .request-form-container button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .close-btn { background: #dc3545; margin-left: 10px; }
+
+    /* Modal Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }    .modal-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .modal-actions button {
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #confirmCheckoutBtn { background-color: #007bff; color: white; }
+    #cancelCheckoutBtn { background-color: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+
+<header>Welcome, {{ employee.first_name }}!</header>
+
+<div class="container">
+  <aside class="sidebar">
+<a href="{% url 'yearly_report' %}">Yearly Report</a>
+    <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+      <button type="submit">Logout</button>
+    </form>
+  </aside>
+
+  <main class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="employee-info">
+      <p><strong>First Name:</strong> {{ employee.first_name }}</p>
+      <p><strong>Last Name:</strong> {{ employee.last_name }}</p>
+      <p><strong>Email:</strong> {{ employee.email }}</p>
+    </div>
+
+    <div class="status-title" id="dateDayDisplay"></div>
+
+    <div class="action-boxes">
+      <div class="action-box">
+        <button id="checkInBtn" {% if has_active_log %}disabled{% endif %}>Check In</button>
+      </div>
+      <div class="action-box">
+        <button id="checkOutBtn" {% if not has_active_log %}disabled{% endif %}>Check Out</button>
+      </div>
+      <div class="action-box request-box">
+        <button type="button" onclick="toggleRequestForm()">Regularize</button>
+      </div>
+    </div>
+
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Check In</th>
+          <th>Check Out</th>
+          <th>Hours Worked</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+
+    <h3>Your Regularization Requests</h3>
+<table class="log-table">
+  <thead>
+    <tr><th>Reason</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {% for req in requests %}
+    <tr>
+      <td>{{ req.reason }}</td>
+      <td>{{ req.status|title }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">No requests yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+    <div class="request-form-overlay" id="requestFormOverlay">
+      <div class="request-form-container">
+        <h2>Submit Regularize Request</h2>
+        <form action="{% url 'submit_request' %}" method="post">
+          {% csrf_token %}
+          <input type="text" name="empid" id="employeeIdInput" placeholder="Employee ID" required>
+          <input type="text" name="first_name" id="firstNameInput" placeholder="First Name" required>
+          <input type="text" name="last_name" id="lastNameInput" placeholder="Last Name" required>
+          {% comment %} <input type="date" name="date" id="dateInput" required>
+          <input type="time" name="check_in" id="checkInInput" required>
+          <input type="time" name="check_out" id="checkOutInput" required> {% endcomment %}
+          <textarea name="reason" rows="4" placeholder="Reason" required></textarea>
+          <button type="submit">Submit</button>
+          <button type="button" class="close-btn" onclick="toggleRequestForm()">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Checkout Confirmation Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <h3>Confirm Check Out</h3>
+    <p>Are you sure you want to check out?</p>
+    <div class="modal-actions">
+      <button id="confirmCheckoutBtn">Yes</button>
+      <button id="cancelCheckoutBtn">No</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleRequestForm() {
+    const formOverlay = document.getElementById("requestFormOverlay");
+    formOverlay.classList.toggle("show");
+
+    if (formOverlay.classList.contains("show")) {
+      document.getElementById("firstNameInput").value = "{{ employee.first_name }}";
+      document.getElementById("lastNameInput").value = "{{ employee.last_name }}";
+      document.getElementById("dateInput").value = '';
+      document.getElementById("checkInInput").value = '';
+      document.getElementById("checkOutInput").value = '';
+      document.querySelector('textarea[name="reason"]').value = '';
+    }
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  async function postData(url = '') {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Accept': 'application/json',
+      },
+      credentials: 'same-origin',
+    });
+    return await response.json();
+  }
+
+  function formatHoursMinutes(decimalHours) {
+    if (!decimalHours) return '---';
+    const totalMinutes = Math.round(decimalHours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h}h ${m}m`;
+  }
+
+  async function refreshLogs() {
+    const res = await fetch("{% url 'get_logs' %}");
+    const logs = await res.json();
+    const tbody = document.getElementById("logTableBody");
+    tbody.innerHTML = '';
+    if (logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4">No logs found.</td></tr>';
+    } else {
+      logs.forEach((log, index) => {
+        const regularizeBtn = index === 0 ? '' :
+          `<button type="button" onclick="toggleRequestForm()">Regularize</button>`;
+        tbody.innerHTML += `
+          <tr>
+            <td>${log.check_in}</td>
+            <td>${log.check_out || '---'}</td>
+            <td>${log.hours_worked ? formatHoursMinutes(log.hours_worked) : '---'}</td>
+            <td>${regularizeBtn}</td>
+          </tr>`;
+      });
+    }
+    return logs;
+  }
+
+  async function performCheckout() {
+    const data = await postData("{% url 'check_out' %}");
+    if (data.error) return alert(data.error);
+    document.getElementById('checkInBtn').disabled = false;
+    document.getElementById('checkOutBtn').disabled = true;
+    refreshLogs();
+  }
+
+  async function checkIn() {
+    const data = await postData("{% url 'check_in' %}");
+    if (data.error) return alert(data.error);
+    document.getElementById('checkInBtn').disabled = true;
+    document.getElementById('checkOutBtn').disabled = false;
+    refreshLogs();
+  }
+
+  function formatDateDay() {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    const now = new Date();
+    return `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  }
+
+  // Event listeners
+  document.getElementById("dateDayDisplay").innerText = formatDateDay();
+  document.getElementById("checkInBtn").addEventListener("click", checkIn);
+  document.getElementById("checkOutBtn").addEventListener("click", () => {
+    document.getElementById("checkoutModal").style.display = "flex";
+  });
+  document.getElementById("confirmCheckoutBtn").addEventListener("click", async () => {
+    document.getElementById("checkoutModal").style.display = "none";
+    await performCheckout();
+  });
+  document.getElementById("cancelCheckoutBtn").addEventListener("click", () => {
+    document.getElementById("checkoutModal").style.display = "none";
+  });
+  window.addEventListener("load", refreshLogs);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f0f2f5;
+    }
+
+    header {
+      background-color:rgb(11, 50, 90);
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 70px); /* subtract header height */
+    }
+
+    .info-section {
+      flex: 1;
+      background: linear-gradient(to right,rgb(204, 225, 247),rgb(203, 226, 250)); /* gradient background */
+      color: black;
+      padding: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-section .info-text {
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .info-section h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-section p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .form-section {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f0f2f5;
+    }
+
+    form {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.4rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.6rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .admin-link,
+    .signup-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .admin-link:hover,
+    .signup-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    Employee Attendance Tracker
+  </header>
+
+  <div class="container">
+    <!-- Left Info Section -->
+    <div class="info-section">
+      <div class="info-text">
+        {% comment %} <img src="background.png", href="">  {% endcomment %}
+        <h3>Welcome to the Employee Attendance Tracker</h3>
+        <p>
+          This platform provides an efficient and accurate way to manage your organization's attendance records.
+          Employees can mark their daily presence, view attendance history, and get timely updates. Admins have full control over user management, attendance reports, and analytics.
+        </p>
+        <p>
+          Our goal is to simplify attendance monitoring while increasing productivity and transparency in the workplace.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="form-section">
+      <form method="POST">
+        <h2>Login</h2>
+        {% csrf_token %}
+
+        {{ form.username.label_tag }}
+        {{ form.username }}
+
+        {{ form.password.label_tag }}
+        {{ form.password }}
+
+        <button type="submit">Login</button>
+
+        <a href="/signup/" class="signup-link">Don't have an account? Sign up here</a>
+        <a href="/admin/" class="admin-link">Go to Admin Panel</a>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

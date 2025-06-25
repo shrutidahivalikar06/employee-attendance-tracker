@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HR Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fc; }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .container { display: flex; height: calc(100vh - 60px); }
+    .sidebar {
+      width: 220px;
+      background-color: #fff;
+      border-right: 1px solid #ccc;
+      padding: 2rem 1rem;
+    }
+    .sidebar a {
+      display: block;
+      margin-bottom: 2rem;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .sidebar form button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    .message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 0.8rem;
+      border: 1px solid #c3e6cb;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    .log-table th, .log-table td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .log-table th {
+      background-color: #007bff;
+      color: white;
+    }
+    .log-table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    form.inline-btn {
+      display: inline;
+    }
+    form.inline-btn button {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 4px;
+      margin: 0 2px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .approve-btn { background-color: #28a745; color: white; }
+    .reject-btn { background-color: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+
+<header>Welcome, {{ employee.first_name }} (HR)</header>
+
+<div class="container">
+  <aside class="sidebar">
+    <a href="{% url 'dashboard' %}">My Dashboard</a>
+    <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+      <button type="submit">Logout</button>
+    </form>
+  </aside>
+
+  <main class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <h2>Employee Attendance Logs</h2>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Check-In</th>
+          <th>Check-Out</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.user.first_name }} {{ log.user.last_name }}</td>
+          <td>{{ log.check_in|date:"H:i:s d/m/Y" }}</td>
+          <td>{{ log.check_out|default:"---"|date:"H:i:s d/m/Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No attendance records available.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Regularization Requests</h2>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Reason</th>
+          <th>Submitted At</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>{{ req.first_name }} {{ req.last_name }}</td>
+          <td>{{ req.reason }}</td>
+          <td>{{ req.empid }}</td>
+          <td>{{ req.status|title }}</td>
+          <td>
+            {% if req.status == 'pending' %}
+            <form method="post" action="{% url 'handle_request_action' req.id %}">{% csrf_token %}
+              <button name="action" value="approve">Approve</button>
+             <button name="action" value="reject">Reject</button>
+            </form>
+            <form method="post" action="{% url 'update_request_status' req.id 'rejected' %}" class="inline-btn">{% csrf_token %}
+              <button class="reject-btn" type="submit">Reject</button>
+            </form>
+            {% else %}
+              {{ req.status|capfirst  }}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</div>
+
+</body>
+</html>

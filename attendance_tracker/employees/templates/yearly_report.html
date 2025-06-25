@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yearly Attendance Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="date"] {
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 15px;
+            font-size: 16px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #0077cc;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Yearly Attendance Report</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="selected_date">Select Date:</label>
+        <input type="date" id="selected_date" name="selected_date" required>
+        <button type="submit">Get Report</button>
+    </form>
+
+    {% if selected_date %}
+      <h3>Showing results for: {{ selected_date }}</h3>
+      {% if records %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.check_in|time:"H:i:s" }}</td>
+                    <td>
+                        {% if record.check_out %}
+                        {{ record.check_out|time:"H:i:s" }}
+                        {% else %}
+                        Not Checked Out
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No attendance record found for this date.</p>
+    {% endif %}
+{% endif %}
+
+</body>
+</html>
